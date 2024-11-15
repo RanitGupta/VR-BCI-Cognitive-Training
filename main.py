@@ -1,5 +1,8 @@
 import numpy as np
 from helpers import extract_eeg, preprocess, prepare_data
+from pathlib import Path
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 
 if __name__ == "__main__":
@@ -11,11 +14,12 @@ if __name__ == "__main__":
     # folder_name = "/home/minsu/Dropbox/Projects/VRCogTraining/Data/sub-yy1/ses-S001/eeg"
 
     # train data
-    folder_name_train = "/Users/jhpark/Desktop/VR-BCI-Cognitive-Training/data/sub-jh1/ses-S001/eeg"
+    folder_name_train = Path(r"C:\Users\tarun\Desktop\Misc\Python\BCI\sub-jh1\ses-S001\eeg")
+
     all_go_epochs_train, all_nogo_epochs_train = extract_eeg(folder_name_train)
     
     # test data
-    folder_name_test = "/Users/jhpark/Desktop/VR-BCI-Cognitive-Training/data/sub-jh1/ses-S002/eeg"
+    folder_name_test = Path(r"C:\Users\tarun\Desktop\Misc\Python\BCI\sub-jh1\ses-S002\eeg")
     # folder_name_test = "/Users/jhpark/Desktop/VR-BCI-Cognitive-Training/data/sub-tr1/ses-S002/eeg"
     # folder_name_test = "/Users/jhpark/Desktop/VR-BCI-Cognitive-Training/data/sub-rn1/ses-S002/eeg"
     all_go_epochs_test, all_nogo_epochs_test = extract_eeg(folder_name_test)
@@ -33,8 +37,7 @@ if __name__ == "__main__":
     print(" Step 3 Train the model ... ")
 
     ''' Train and Evaluate SVM Model '''
-    from sklearn.svm import SVC
-    from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
 
     # Initialize and train the SVM model
     svm_model = SVC(kernel='linear', random_state=42)
