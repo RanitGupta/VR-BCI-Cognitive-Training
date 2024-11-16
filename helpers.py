@@ -10,6 +10,7 @@ import numpy as np
 
 from scipy.interpolate import interp1d
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
@@ -18,6 +19,10 @@ import matplotlib.pyplot as plt
 import joblib
 from pathlib import Path
 from types import SimpleNamespace
+
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
 
 # set up parameters
 eeg_stream_name = "eegoSports 000103"
@@ -155,8 +160,44 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     return all_go_epochs, all_nogo_epochs
 
 
-def downsample_data(X, factor=2):
-    return X[:, :, ::factor]
+def downsample_data(X, factor=2, pca=False, n_components=None):
+    """
+    Downsamples the EEG data and applies PCA for dimensionality reduction.
+    
+    Parameters:
+    - X: ndarray of shape (n_samples, n_channels, n_times)
+    - factor: int, downsampling factor for the time dimension
+    - n_components: int or float, number of principal components to retain 
+                    or the variance ratio to retain (if float)
+    
+    Returns:
+    - X_transformed: ndarray of shape (n_samples, n_channels_reduced, n_times_downsampled)
+    """
+    # Downsample the time dimension
+    X_downsampled = X[:, :, ::factor]
+    
+    n_samples, n_channels, n_times = X_downsampled.shape
+    X_transformed = np.zeros((n_samples, n_components if n_components else n_channels, n_times))
+    
+    # Apply PCA to each time slice across channels
+    if pca:
+        for t in range(n_times):
+            # Extract the data for all samples at time t
+            time_slice = X_downsampled[:, :, t]  # Shape: (n_samples, n_channels)
+            
+            # Standardize the data across samples
+            scaler = StandardScaler()
+            time_slice_standardized = scaler.fit_transform(time_slice)
+            
+            # Apply PCA
+            pca = PCA(n_components=n_components)
+            reduced = pca.fit_transform(time_slice_standardized)  # Shape: (n_samples, n_components)
+            
+            # Assign reduced data back
+            X_transformed[:, :, t] = reduced
+    
+    return X_transformed
+
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test):
     
@@ -215,8 +256,8 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     # X_test = scaler.transform(X_test)
 
     # Downsample
-    X_train = downsample_data(X_train, factor=4)
-    X_test = downsample_data(X_test, factor=4)
+    X_train = downsample_data(X_train, factor=4, pca=False, n_components=33)
+    X_test = downsample_data(X_test, factor=4, pca=False, n_components=33)
 
     # temporary feature
     X_train = X_train.mean(axis=2) 
@@ -228,6 +269,28 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     print("Combined test labels shape:", y_test.shape)
     
     return X_train, y_train, X_test, y_test
+
+
+def run_model(X_train, y_train, X_test, mdl='svm'):
+    
+    if mdl == "svm":
+        # Initialize and train the SVM model
+        svm_model = SVC(kernel='rbf', random_state=42)
+        svm_model.fit(X_train, y_train)
+
+        # Predict on the test set
+        y_pred = svm_model.predict(X_test)
+
+    return y_pred
+
+
+def evaluate_model(y_test, y_pred):
+    accuracy = accuracy_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred)
+
+    return {"accuracy": accuracy, "conf_matrix": conf_matrix, 'class_report' : class_report}
+
 
 def feature_extraction(X):
     ''' extract significant features to improve model performance '''

@@ -1,5 +1,5 @@
 import numpy as np
-from helpers import extract_eeg, preprocess, prepare_data
+from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_model
 from pathlib import Path
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
@@ -36,27 +36,22 @@ if __name__ == "__main__":
     print("\n\n")
     print(" Step 3 Train the model ... ")
 
-    ''' Train and Evaluate SVM Model '''
-
+    ''' Train and Evaluate Model '''
 
     # Initialize and train the SVM model
-    svm_model = SVC(kernel='linear', random_state=42)
-    svm_model.fit(X_train, y_train)
-
-    # Predict on the test set
-    y_pred = svm_model.predict(X_test)
+    y_pred = run_model(X_train, y_train, X_test, mdl='svm')
 
     # Evaluate the model
-    accuracy = accuracy_score(y_test, y_pred)
-    conf_matrix = confusion_matrix(y_test, y_pred)
-    class_report = classification_report(y_test, y_pred)
+    metrics = evaluate_model(y_test, y_pred)
 
     # Print results
-    print(f"Accuracy: {accuracy * 100:.2f}%")
+    print(f"Accuracy: {metrics['accuracy'] * 100:.2f}%")
     print("\nConfusion Matrix:")
-    print(conf_matrix)
+    print(metrics['conf_matrix'])
     print("\nClassification Report:")
-    print(class_report)
+    print(metrics['class_report'])
+
+    print(y_pred)
 
     # import pdb; pdb.set_trace()
 
