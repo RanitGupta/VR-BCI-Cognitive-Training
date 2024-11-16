@@ -1,0 +1,67 @@
+Model Type: lda
+PCA: True
+  N_Channels: 20
+TIme Downsample Factor: 4
+Num. Folds for K-Folds: 4
+
+
+Results for Training on S1 and Test on S2
+----------------------------------------------------
+Avg. Fold Train Accuracy: 74.17%
+Test Accuracy: 54.63%
+
+Test Confusion Matrix:
+[[64 44]
+ [54 54]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.54      0.59      0.57       108
+           1       0.55      0.50      0.52       108
+
+    accuracy                           0.55       216
+   macro avg       0.55      0.55      0.55       216
+weighted avg       0.55      0.55      0.55       216
+
+
+
+Results for Training on S1 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 74.17%
+Test Accuracy: 64.81%
+
+Test Confusion Matrix:
+[[74 34]
+ [42 66]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.64      0.69      0.66       108
+           1       0.66      0.61      0.63       108
+
+    accuracy                           0.65       216
+   macro avg       0.65      0.65      0.65       216
+weighted avg       0.65      0.65      0.65       216
+
+
+
+Results for Training on S1 + S2 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 72.59%
+Test Accuracy: 64.81%
+
+Test Confusion Matrix:
+[[74 34]
+ [42 66]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.64      0.69      0.66       108
+           1       0.66      0.61      0.63       108
+
+    accuracy                           0.65       216
+   macro avg       0.65      0.65      0.65       216
+weighted avg       0.65      0.65      0.65       216

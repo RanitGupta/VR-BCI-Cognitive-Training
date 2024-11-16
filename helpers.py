@@ -201,7 +201,7 @@ def downsample_data(X, factor=2, pca=False, n_components=None):
     return X_transformed
 
 
-def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test):
+def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor = 2, use_pca=False, n_components=20):
     
     """
     Training (Online Session 1) and Testing set (Offline Sessino 1 & 2).
@@ -258,8 +258,8 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     # X_test = scaler.transform(X_test)
 
     # Downsample
-    X_train = downsample_data(X_train, factor=4, pca=True, n_components=20)
-    X_test = downsample_data(X_test, factor=4, pca=True, n_components=20)
+    X_train = downsample_data(X_train, factor=time_ds_factor, pca=use_pca, n_components=n_components)
+    X_test = downsample_data(X_test, factor=time_ds_factor, pca=use_pca, n_components=n_components)
 
     # temporary feature
     X_train = X_train.mean(axis=2) 
@@ -310,6 +310,7 @@ def run_model(X, y, mdl='svm', n_splits = 4):
     accuracies = []
     confusion_matrices = []
     classification_reports = []
+    best_model = None
 
     # Perform k-fold cross-validation
     for fold_idx, (train_index, test_index) in enumerate(kf.split(X)):
@@ -320,12 +321,18 @@ def run_model(X, y, mdl='svm', n_splits = 4):
         # Train the model on the training fold
         model.fit(X_train, y_train)
 
+        if best_model is None:
+            best_model = model
+
         # Predict on the validation fold
         y_pred = model.predict(X_test)
 
         # Compute accuracy for this fold
         accuracy = accuracy_score(y_test, y_pred)
         accuracies.append(accuracy)
+
+        if accuracy > accuracies[-1]:
+            best_model = model
 
         # Compute confusion matrix
         cm = confusion_matrix(y_test, y_pred)
@@ -337,19 +344,19 @@ def run_model(X, y, mdl='svm', n_splits = 4):
 
         # Display fold results
         print(f"\nFold {fold_idx + 1}")
-        print(f"Accuracy: {accuracy:.4f}")
-        print("Classification Report:")
-        print(classification_report(y_test, y_pred))
-        print("Confusion Matrix:")
-        print(cm)
+        print(f"Fold Accuracy: {accuracy:.4f}")
+        # print("Classification Report:")
+        # print(classification_report(y_test, y_pred))
+        # print("Confusion Matrix:")
+        # print(cm)
         # ConfusionMatrixDisplay(confusion_matrix=cm).plot()
         # plt.show()
 
     # Compute the average accuracy across all folds
     avg_accuracy = np.mean(accuracies)
 
-    print(f"\nAverage accuracy across {n_splits} folds: {avg_accuracy:.2f}")
-    return avg_accuracy, classification_reports, confusion_matrices
+    # print(f"\nAverage accuracy across {n_splits} folds: {avg_accuracy:.2f}")
+    return best_model, avg_accuracy, classification_reports, confusion_matrices
 
 
 def evaluate_model(y_test, y_pred):
