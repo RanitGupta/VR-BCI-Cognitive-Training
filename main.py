@@ -39,7 +39,7 @@ if __name__ == "__main__":
     X = np.concatenate((X_train, X_test), axis=0)
     y = np.concatenate((y_train, y_test), axis=0)
 
-    # Initialize and train the SVM model
+    # Initialize and train the model
     avg_accuracy, classification_reports, confusion_matrices = run_model(X, y, mdl='lda', n_splits=4) # best so far (with ::4 time downsample and PCA n_components = 20)
 
     # print(y.shape)
