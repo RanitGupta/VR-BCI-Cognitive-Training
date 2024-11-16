@@ -3,7 +3,7 @@ from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_m
 from pathlib import Path
 
 # Set PARAMETRS HERE
-MODEL = 'lda'                       # classifier
+MODEL = 'lda'                       # classifier ('svm', 'rf', 'lda')
 PCA, N_COMPONENTS = True, 20        # PCA downsampling
 TIME_DOWNSAMPLE_FACTOR = 4          # Time downsampling factor
 N_FOLDS = 4                         # num. folds for K_folds
