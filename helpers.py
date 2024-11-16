@@ -21,6 +21,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 
@@ -256,8 +258,8 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     # X_test = scaler.transform(X_test)
 
     # Downsample
-    X_train = downsample_data(X_train, factor=4, pca=False, n_components=33)
-    X_test = downsample_data(X_test, factor=4, pca=False, n_components=33)
+    X_train = downsample_data(X_train, factor=4, pca=True, n_components=20)
+    X_test = downsample_data(X_test, factor=4, pca=True, n_components=20)
 
     # temporary feature
     X_train = X_train.mean(axis=2) 
@@ -271,17 +273,83 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     return X_train, y_train, X_test, y_test
 
 
-def run_model(X_train, y_train, X_test, mdl='svm'):
-    
+def run_model(X, y, mdl='svm', n_splits = 4):
+    """
+    Run a model using k-fold cross-validation on the combined training and test data.
+
+    Parameters:
+    - X: np.ndarray, feature data (shape: [n_samples, n_features])
+    - y: np.ndarray, target labels (shape: [n_samples])
+    - model: sklearn-like model object with `fit` and `predict` methods
+    - n_splits: int, number of folds for cross-validation
+
+    Returns:
+    - avg_accuracy: float, average accuracy across folds
+    """
+
     if mdl == "svm":
-        # Initialize and train the SVM model
-        svm_model = SVC(kernel='rbf', random_state=42)
-        svm_model.fit(X_train, y_train)
+        model = SVC(kernel='rbf', random_state=42)
+    elif mdl == "rf":
+        model = RandomForestClassifier(
+            n_estimators=500,  # Number of trees in the forest
+            max_depth=None,    # Maximum depth of each tree (None means nodes are expanded until all leaves are pure or until min_samples_split is reached)
+            min_samples_split=2,  # Minimum number of samples required to split an internal node
+            min_samples_leaf=1,   # Minimum number of samples required to be at a leaf node
+            random_state=42,      # Ensures reproducibility
+            n_jobs=-1,            # Use all processors for parallel computation
+            class_weight=None     # Specify weights for classes if needed (e.g., for imbalanced datasets)
+        )
+    elif mdl == "lda":
+        model = LinearDiscriminantAnalysis(solver='svd', shrinkage=None, n_components=None)
 
-        # Predict on the test set
-        y_pred = svm_model.predict(X_test)
 
-    return y_pred
+
+    # Initialize k-fold cross-validator
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+    accuracies = []
+    confusion_matrices = []
+    classification_reports = []
+
+    # Perform k-fold cross-validation
+    for fold_idx, (train_index, test_index) in enumerate(kf.split(X)):
+        # Split data into training and validation sets
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        # Train the model on the training fold
+        model.fit(X_train, y_train)
+
+        # Predict on the validation fold
+        y_pred = model.predict(X_test)
+
+        # Compute accuracy for this fold
+        accuracy = accuracy_score(y_test, y_pred)
+        accuracies.append(accuracy)
+
+        # Compute confusion matrix
+        cm = confusion_matrix(y_test, y_pred)
+        confusion_matrices.append(cm)
+
+        # Compute classification report
+        cr = classification_report(y_test, y_pred, output_dict=False)
+        classification_reports.append(cr)
+
+        # Display fold results
+        print(f"\nFold {fold_idx + 1}")
+        print(f"Accuracy: {accuracy:.4f}")
+        print("Classification Report:")
+        print(classification_report(y_test, y_pred))
+        print("Confusion Matrix:")
+        print(cm)
+        # ConfusionMatrixDisplay(confusion_matrix=cm).plot()
+        # plt.show()
+
+    # Compute the average accuracy across all folds
+    avg_accuracy = np.mean(accuracies)
+
+    print(f"\nAverage accuracy across {n_splits} folds: {avg_accuracy:.2f}")
+    return avg_accuracy, classification_reports, confusion_matrices
 
 
 def evaluate_model(y_test, y_pred):
