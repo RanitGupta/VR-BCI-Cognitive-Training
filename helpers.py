@@ -198,7 +198,9 @@ def downsample_data(X, factor=2, pca=False, n_components=None):
             # Assign reduced data back
             X_transformed[:, :, t] = reduced
     
-    return X_transformed
+        return X_transformed
+        
+    return X_downsampled
 
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor = 2, use_pca=False, n_components=20):
