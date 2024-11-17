@@ -5,6 +5,7 @@ import pyxdf
 import mne
 from mne.preprocessing import ICA
 from mne.filter import filter_data
+from mne.viz import plot_topomap
 
 import numpy as np
 
@@ -125,7 +126,76 @@ def extract_eeg(folder_name):
     all_go_epochs = mne.concatenate_epochs(all_go_epochs)
     all_nogo_epochs = mne.concatenate_epochs(all_nogo_epochs)
 
+    # Map uppercase channel names to lowercase
+    rename_mapping = {
+        'FZ': 'Fz',
+        'FCZ': 'FCz',
+        'CZ': 'Cz',
+        'CPZ': 'CPz',
+        'PZ': 'Pz',
+        'POZ': 'POz'
+    }
+
+    # Apply the renaming
+    all_go_epochs.rename_channels(rename_mapping)
+    all_nogo_epochs.rename_channels(rename_mapping)
+
+    montage = mne.channels.make_standard_montage("standard_1020")
+    all_go_epochs.set_montage(montage)
+    all_nogo_epochs.set_montage(montage)
+
     return all_go_epochs, all_nogo_epochs
+
+def plot_cnv_averages(go_epochs, nogo_epochs):
+    # Compute trial averages for Cz channel
+    go_avg = go_epochs.average(picks=['Cz'])
+    nogo_avg = nogo_epochs.average(picks=['Cz'])
+
+    # Get time values (shared for all epochs)
+    times = go_avg.times
+    
+    # Plot average CNV
+    plt.figure(figsize=(12, 6))
+    plt.plot(times, go_avg.data[0], label=f'Go', alpha=0.7)
+    plt.plot(times, nogo_avg.data[0], label=f'No-Go', linestyle='dashed', alpha=0.7)
+    plt.axvline(x=0, color='k', linestyle='--', label='Stimulus 1 Onset')
+    plt.title("Average CNV Signal for Go and No-Go Trials")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude for Cz Channel (µV)")
+    plt.legend(loc='best', fontsize='small')
+    plt.grid(True)
+    plt.show()
+
+def plot_topoplots(go_epochs, nogo_epochs): 
+    # Compute averages
+    go_avg = go_epochs.average()
+    nogo_avg = nogo_epochs.average()
+
+    # Define time points
+    time_points = [0.5, 1.5, 2.5, 3.5]
+    time_indices = [np.argmin(np.abs(go_avg.times - t)) for t in time_points]
+
+    # create figure
+    fig, axes = plt.subplots(2, 4, figsize=(16, 6), constrained_layout=True)
+    fig.suptitle("Go and No-Go at Different Time Points", fontsize=16)
+    for i, t_idx in enumerate(time_indices):
+        im, _ = plot_topomap(
+            go_avg.data[:, t_idx],  # Data at the specific time index
+            go_avg.info,
+            axes=axes[0, i],
+            show=False
+        )
+        axes[0, i].set_title(f"{time_points[i]}s (Go)", fontsize=10)
+
+        im, _ = plot_topomap(
+            nogo_avg.data[:, t_idx],  # Data at the specific time index
+            nogo_avg.info,
+            axes=axes[1, i],
+            show=False
+        )
+        axes[1, i].set_title(f"{time_points[i]}s (No-Go)", fontsize=10)
+
+    plt.show()
 
 def preprocess(all_go_epochs, all_nogo_epochs):
     '''
