@@ -1,7 +1,7 @@
 Model Type: lda
 PCA: True
   N_Channels: 20
-TIme Downsample Factor: 4
+Time Downsample Factor: 4
 Num. Folds for K-Folds: 4
 
 

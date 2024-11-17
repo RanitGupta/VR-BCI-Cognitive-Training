@@ -1,6 +1,8 @@
 import numpy as np
 from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_model
 from pathlib import Path
+import os
+import time
 
 # Set PARAMETRS HERE
 MODEL = 'lda'                       # classifier ('svm', 'rf', 'lda')
@@ -73,12 +75,12 @@ def main():
     metrics_B = evaluate_model(y_test_B, y_pred_B)
 
     # write results
-    with open("output.txt", 'w') as f:
+    with open(f"outputs/output{time.time()}.txt", 'w') as f:
         f.write(f"Model Type: {MODEL}\n")
         f.write(f"PCA: {PCA}\n")
         N_channels = N_COMPONENTS if PCA else "ALL"
         f.write(f"  N_Channels: {N_channels}\n")
-        f.write(f"TIme Downsample Factor: {TIME_DOWNSAMPLE_FACTOR}\n")
+        f.write(f"Time Downsample Factor: {TIME_DOWNSAMPLE_FACTOR}\n")
         f.write(f"Num. Folds for K-Folds: {N_FOLDS}\n\n\n")
 
         f.write("Results for Training on S1 and Test on S2\n")
@@ -139,4 +141,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if not os.path.exists("outputs"):
+        os.makedirs("outputs")  
+
     main()
