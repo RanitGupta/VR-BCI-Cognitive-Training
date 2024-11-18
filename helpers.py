@@ -42,6 +42,7 @@ def get_stream_indices(streams, name_data, name_trig):
             i_trig = i
     return i_data, i_trig
 
+
 def extract_eeg(folder_name):
     
     files = [f for f in os.listdir(folder_name) if f.endswith(".xdf")]
@@ -146,6 +147,7 @@ def extract_eeg(folder_name):
 
     return all_go_epochs, all_nogo_epochs
 
+
 def plot_cnv_averages(go_epochs, nogo_epochs):
     # Compute trial averages for Cz channel
     go_avg = go_epochs.average(picks=['Cz'])
@@ -165,6 +167,7 @@ def plot_cnv_averages(go_epochs, nogo_epochs):
     plt.legend(loc='best', fontsize='small')
     plt.grid(True)
     plt.show()
+
 
 def plot_topoplots(go_epochs, nogo_epochs): 
     # Compute averages
@@ -196,7 +199,7 @@ def plot_topoplots(go_epochs, nogo_epochs):
         axes[1, i].set_title(f"{time_points[i]}s (No-Go)", fontsize=10)
 
     plt.show()
-
+    
 def preprocess(all_go_epochs, all_nogo_epochs):
     '''
     # Artifact removal 
@@ -417,12 +420,6 @@ def run_model(X, y, mdl='svm', n_splits = 4):
         # Display fold results
         print(f"\nFold {fold_idx + 1}")
         print(f"Fold Accuracy: {accuracy:.4f}")
-        # print("Classification Report:")
-        # print(classification_report(y_test, y_pred))
-        # print("Confusion Matrix:")
-        # print(cm)
-        # ConfusionMatrixDisplay(confusion_matrix=cm).plot()
-        # plt.show()
 
     # Compute the average accuracy across all folds
     avg_accuracy = np.mean(accuracies)
