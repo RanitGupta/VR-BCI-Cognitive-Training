@@ -1,0 +1,67 @@
+Model Type: rf
+PCA: True
+  N_Channels: 20
+Time Downsample Factor: 4
+Num. Folds for K-Folds: 4
+
+
+Results for Training on S1 and Test on S2
+----------------------------------------------------
+Avg. Fold Train Accuracy: 67.08%
+Test Accuracy: 59.26%
+
+Test Confusion Matrix:
+[[64 44]
+ [44 64]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.59      0.59      0.59       108
+           1       0.59      0.59      0.59       108
+
+    accuracy                           0.59       216
+   macro avg       0.59      0.59      0.59       216
+weighted avg       0.59      0.59      0.59       216
+
+
+
+Results for Training on S1 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 67.08%
+Test Accuracy: 61.57%
+
+Test Confusion Matrix:
+[[62 46]
+ [37 71]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.63      0.57      0.60       108
+           1       0.61      0.66      0.63       108
+
+    accuracy                           0.62       216
+   macro avg       0.62      0.62      0.62       216
+weighted avg       0.62      0.62      0.62       216
+
+
+
+Results for Training on S1 + S2 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 72.15%
+Test Accuracy: 69.44%
+
+Test Confusion Matrix:
+[[76 32]
+ [34 74]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.69      0.70      0.70       108
+           1       0.70      0.69      0.69       108
+
+    accuracy                           0.69       216
+   macro avg       0.69      0.69      0.69       216
+weighted avg       0.69      0.69      0.69       216

@@ -24,6 +24,7 @@ from types import SimpleNamespace
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+import xgboost as xgb
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 
@@ -276,10 +277,9 @@ def downsample_data(X, factor=2, pca=False, n_components=None):
     return X_downsampled
 
 
-def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor = 2, use_pca=False, n_components=20):
-    
+def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
     """
-    Training (Online Session 1) and Testing set (Offline Sessino 1 & 2).
+    Training (Online Session 1) and Testing set (Offline Session 1 & 2).
 
     Prepares the training and test datasets by preprocessing, converting to NumPy arrays, 
     and creating labels for Go and NoGo epochs.
@@ -289,32 +289,32 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     - all_nogo_epochs_train: NoGo epochs for training
     - all_go_epochs_test: Go epochs for testing
     - all_nogo_epochs_test: NoGo epochs for testing
-    - preprocess: preprocessing function to be applied to each epoch set
-    
+
     Returns:
     - X_train: Combined Go and NoGo data for training
     - y_train: Labels for training data
     - X_test: Combined Go and NoGo data for testing
     - y_test: Labels for testing data
     """
-
     # Convert training data to Numpy arrays and prepare labels
-    X_go_train = all_go_epochs_train.get_data()      # Shape: (n_go_train_epochs, n_channels, n_times)
+    X_go_train = all_go_epochs_train.get_data()  # Shape: (n_go_train_epochs, n_channels, n_times)
     X_nogo_train = all_nogo_epochs_train.get_data()  # Shape: (n_nogo_train_epochs, n_channels, n_times)
 
     # Convert test data to Numpy arrays and prepare labels
-    X_go_test = all_go_epochs_test.get_data()        # Shape: (n_go_test_epochs, n_channels, n_times)
-    X_nogo_test = all_nogo_epochs_test.get_data()    # Shape: (n_nogo_test_epochs, n_channels, n_times)
+    X_go_test = all_go_epochs_test.get_data()  # Shape: (n_go_test_epochs, n_channels, n_times)
+    X_nogo_test = all_nogo_epochs_test.get_data()  # Shape: (n_nogo_test_epochs, n_channels, n_times)
 
-    # Create labels for train and test sets
+    # Create labels
     y_go_train = np.ones(X_go_train.shape[0], dtype=int)    # Label '1' for Go train epochs
-    y_nogo_train = np.zeros(X_nogo_train.shape[0], dtype=int) # Label '0' for NoGo train epochs
+    y_nogo_train = np.zeros(X_nogo_train.shape[0], dtype=int)  # Label '0' for NoGo train epochs
     y_go_test = np.ones(X_go_test.shape[0], dtype=int)      # Label '1' for Go test epochs
-    y_nogo_test = np.zeros(X_nogo_test.shape[0], dtype=int) # Label '0' for NoGo test epochs
+    y_nogo_test = np.zeros(X_nogo_test.shape[0], dtype=int)  # Label '0' for NoGo test epochs
 
-    # Combine train data
-    X_train = np.concatenate((X_go_train, X_nogo_train), axis=0)  # Shape: (n_total_train_epochs, n_channels, n_times)
-    y_train = np.concatenate((y_go_train, y_nogo_train), axis=0)  # Shape: (n_total_train_epochs,)
+    # Combine data
+    X_train = np.concatenate((X_go_train, X_nogo_train), axis=0)
+    y_train = np.concatenate((y_go_train, y_nogo_train), axis=0)
+    X_test = np.concatenate((X_go_test, X_nogo_test), axis=0)
+    y_test = np.concatenate((y_go_test, y_nogo_test), axis=0)
 
     # Shuffle training data
     np.random.seed(42)
@@ -322,21 +322,27 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     X_train = X_train[indices]
     y_train = y_train[indices]
 
-
-    # Combine test data
-    X_test = np.concatenate((X_go_test, X_nogo_test), axis=0)     # Shape: (n_total_test_epochs, n_channels, n_times)
-    y_test = np.concatenate((y_go_test, y_nogo_test), axis=0)     # Shape: (n_total_test_epochs,)
-    
-    # Standardize features
-    # scaler = StandardScaler()
-    # X_train = scaler.fit_transform(X_train)
-    # X_test = scaler.transform(X_test)
-
     # Downsample
     X_train = downsample_data(X_train, factor=time_ds_factor, pca=use_pca, n_components=n_components)
     X_test = downsample_data(X_test, factor=time_ds_factor, pca=use_pca, n_components=n_components)
 
-    # temporary feature
+    # Flatten along the time axis
+    n_samples_train, n_channels, n_times_train = X_train.shape
+    n_samples_test, n_channels, n_times_test = X_test.shape
+
+    X_train_flat = X_train.reshape(n_samples_train, -1)  # Shape: (n_samples, n_channels * n_times)
+    X_test_flat = X_test.reshape(n_samples_test, -1)    # Shape: (n_samples, n_channels * n_times)
+
+    # Apply StandardScaler
+    scaler = StandardScaler()
+    X_train_flat = scaler.fit_transform(X_train_flat)
+    X_test_flat = scaler.transform(X_test_flat)
+
+    # Reshape back to original dimensions
+    X_train = X_train_flat.reshape(n_samples_train, n_channels, n_times_train)
+    X_test = X_test_flat.reshape(n_samples_test, n_channels, n_times_test)
+
+    # Temporary feature
     X_train = X_train.mean(axis=2) 
     X_test = X_test.mean(axis=2)
 
@@ -344,7 +350,7 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     print("Combined train labels shape:", y_train.shape)
     print("Combined test data shape:", X_test.shape)
     print("Combined test labels shape:", y_test.shape)
-    
+
     return X_train, y_train, X_test, y_test
 
 
@@ -376,8 +382,14 @@ def run_model(X, y, mdl='svm', n_splits = 4):
         )
     elif mdl == "lda":
         model = LinearDiscriminantAnalysis(solver='svd', shrinkage=None, n_components=None)
-
-
+    elif mdl == "xgb":
+        model = xgb.XGBClassifier(
+            objective='binary:logistic',  # For binary classification
+            n_estimators=500,            # Number of trees (iterations)
+            max_depth=6,                 # Maximum depth of each tree
+            learning_rate=0.3,           # Learning rate
+            random_state=42
+        )
 
     # Initialize k-fold cross-validator
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)

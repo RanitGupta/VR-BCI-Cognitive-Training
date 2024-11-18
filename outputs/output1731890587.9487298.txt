@@ -7,18 +7,18 @@ Num. Folds for K-Folds: 4
 
 Results for Training on S1 and Test on S2
 ----------------------------------------------------
-Avg. Fold Train Accuracy: 74.17%
-Test Accuracy: 54.63%
+Avg. Fold Train Accuracy: 75.42%
+Test Accuracy: 55.09%
 
 Test Confusion Matrix:
-[[64 44]
+[[65 43]
  [54 54]]
 
 Test Classification Report:
               precision    recall  f1-score   support
 
-           0       0.54      0.59      0.57       108
-           1       0.55      0.50      0.52       108
+           0       0.55      0.60      0.57       108
+           1       0.56      0.50      0.53       108
 
     accuracy                           0.55       216
    macro avg       0.55      0.55      0.55       216
@@ -28,40 +28,40 @@ weighted avg       0.55      0.55      0.55       216
 
 Results for Training on S1 and Test on S3
 ----------------------------------------------------
-Avg. Fold Train Accuracy: 74.17%
-Test Accuracy: 64.81%
+Avg. Fold Train Accuracy: 75.42%
+Test Accuracy: 66.20%
 
 Test Confusion Matrix:
-[[74 34]
- [42 66]]
+[[75 33]
+ [40 68]]
 
 Test Classification Report:
               precision    recall  f1-score   support
 
-           0       0.64      0.69      0.66       108
-           1       0.66      0.61      0.63       108
+           0       0.65      0.69      0.67       108
+           1       0.67      0.63      0.65       108
 
-    accuracy                           0.65       216
-   macro avg       0.65      0.65      0.65       216
-weighted avg       0.65      0.65      0.65       216
+    accuracy                           0.66       216
+   macro avg       0.66      0.66      0.66       216
+weighted avg       0.66      0.66      0.66       216
 
 
 
 Results for Training on S1 + S2 and Test on S3
 ----------------------------------------------------
-Avg. Fold Train Accuracy: 72.59%
-Test Accuracy: 64.81%
+Avg. Fold Train Accuracy: 73.90%
+Test Accuracy: 65.74%
 
 Test Confusion Matrix:
-[[74 34]
- [42 66]]
+[[75 33]
+ [41 67]]
 
 Test Classification Report:
               precision    recall  f1-score   support
 
-           0       0.64      0.69      0.66       108
-           1       0.66      0.61      0.63       108
+           0       0.65      0.69      0.67       108
+           1       0.67      0.62      0.64       108
 
-    accuracy                           0.65       216
-   macro avg       0.65      0.65      0.65       216
-weighted avg       0.65      0.65      0.65       216
+    accuracy                           0.66       216
+   macro avg       0.66      0.66      0.66       216
+weighted avg       0.66      0.66      0.66       216

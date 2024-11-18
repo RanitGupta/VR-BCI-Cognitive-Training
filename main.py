@@ -4,7 +4,7 @@ import os
 import time
 
 # Set PARAMETRS HERE
-MODEL = 'svm'                       # classifier ('svm', 'rf', 'lda')
+MODEL = 'rf'                       # classifier ('svm', 'rf', 'lda', 'xgb')
 PCA, N_COMPONENTS = True, 20        # PCA downsampling
 TIME_DOWNSAMPLE_FACTOR = 4          # Time downsampling factor
 N_FOLDS = 4                         # num. folds for K_folds
@@ -42,13 +42,13 @@ def main():
     print("\n\n")
     print("Step 2: Prepare dataset ...")
     X_train_A, y_train_A, X_test_A_s2, y_test_A_s2 = prepare_data(all_go_epochs_train_A, all_nogo_epochs_train_A, all_go_epochs_test_A_s2, all_nogo_epochs_test_A_s2, 
-                                                                  time_ds_factor=4, use_pca=True, n_components=20)
+                                                                  time_ds_factor=TIME_DOWNSAMPLE_FACTOR, use_pca=PCA, n_components=N_COMPONENTS)
     
     _, _, X_test_A_s3, y_test_A_s3 = prepare_data(all_go_epochs_train_A, all_nogo_epochs_train_A, all_go_epochs_test_A_s3, all_nogo_epochs_test_A_s3, 
-                                                                  time_ds_factor=4, use_pca=True, n_components=20)
+                                                                  time_ds_factor=TIME_DOWNSAMPLE_FACTOR, use_pca=PCA, n_components=N_COMPONENTS)
 
     X_train_B, y_train_B, X_test_B, y_test_B = prepare_data(all_go_epochs_train_B, all_nogo_epochs_train_B, all_go_epochs_test_B, all_nogo_epochs_test_B, 
-                                                                  time_ds_factor=4, use_pca=True, n_components=20)
+                                                                  time_ds_factor=TIME_DOWNSAMPLE_FACTOR, use_pca=PCA, n_components=N_COMPONENTS)
 
     print("\n\n")
     print(" Step 3 Train the model ... ")
