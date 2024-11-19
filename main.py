@@ -1,10 +1,9 @@
 from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_model, compute_empirical_chance
 from pathlib import Path
 import os
-import time
 
 # Set PARAMETRS HERE
-MODEL = 'rf'                       # classifier ('svm', 'rf', 'lda', 'xgb')
+MODEL = 'lda'                       # classifier ('svm', 'rf', 'lda', 'xgb')
 PCA, N_COMPONENTS = True, 20        # PCA downsampling
 TIME_DOWNSAMPLE_FACTOR = 4          # Time downsampling factor
 N_FOLDS = 4                         # num. folds for K_folds
@@ -58,28 +57,28 @@ def main():
     # Initialize and train the model
     # train split A
     print("\n\n ----- Train A -----")
-    model_A, avg_accuracy_A, classification_reports_A, confusion_matrices_A = run_model(X_train_A, y_train_A, mdl=MODEL, n_splits=N_FOLDS) # best so far (with ::4 time downsample and PCA n_components = 20)
+    model_A, avg_accuracy_A, classification_reports_A, confusion_matrices_A = run_model(X_train_A, y_train_A, mdl=MODEL, n_splits=N_FOLDS) 
 
 
     # train split B
     print("\n\n ----- Train B -----")
-    model_B, avg_accuracy_B, classification_reports_B, confusion_matrices_B = run_model(X_train_B, y_train_B, mdl=MODEL, n_splits=N_FOLDS) # best so far (with ::4 time downsample and PCA n_components = 20)
+    model_B, avg_accuracy_B, classification_reports_B, confusion_matrices_B = run_model(X_train_B, y_train_B, mdl=MODEL, n_splits=N_FOLDS)
 
     # Evaluate the model
     print("\n\n ----- Train: Session 1 & Test: Session 2 -----")
     y_pred_A_s2 = model_A.predict(X_test_A_s2)
     metrics_A_s2 = evaluate_model(y_test_A_s2, y_pred_A_s2)
-    empirical_chance_mean_A_s2, empirical_chance_std_A_s2 = compute_empirical_chance(X_test_A_s2, y_test_A_s2, model_A, n_iterations=100)
+    # empirical_chance_mean_A_s2, empirical_chance_std_A_s2 = compute_empirical_chance(X_test_A_s2, y_test_A_s2, model_A, n_iterations=100)
 
     print("\n\n ----- Train: Session 1 & Test: Session 3 -----")
     y_pred_A_s3 = model_A.predict(X_test_A_s3)
     metrics_A_s3 = evaluate_model(y_test_A_s3, y_pred_A_s3)
-    empirical_chance_mean_A_s3, empirical_chance_std_A_s3 = compute_empirical_chance(X_test_A_s3, y_test_A_s3, model_A, n_iterations=100)
+    # empirical_chance_mean_A_s3, empirical_chance_std_A_s3 = compute_empirical_chance(X_test_A_s3, y_test_A_s3, model_A, n_iterations=100)
 
     print("\n\n ----- Train: Session 1 & 2 & Test: Session 3 -----")
     y_pred_B = model_B.predict(X_test_B)
     metrics_B = evaluate_model(y_test_B, y_pred_B)
-    empirical_chance_mean_B, empirical_chance_std_B = compute_empirical_chance(X_test_B, y_test_B, model_A, n_iterations=100)
+    # empirical_chance_mean_B, empirical_chance_std_B = compute_empirical_chance(X_test_B, y_test_B, model_A, n_iterations=100)
 
     # write results
     with open(f"outputs/{MODEL}_{N_COMPONENTS}.txt", 'w') as f:
@@ -98,7 +97,7 @@ def main():
         f.write(f"{metrics_A_s2['conf_matrix']}\n")
         f.write("\nTest Classification Report:\n")
         f.write(f"{metrics_A_s2['class_report']}\n\n\n")
-        f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s2:.3f} ± {empirical_chance_std_A_s2:.3f}\n\n\n")
+        # f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s2:.3f} ± {empirical_chance_std_A_s2:.3f}\n\n\n")
 
 
         f.write("Results for Training on S1 and Test on S3\n")
@@ -109,7 +108,7 @@ def main():
         f.write(f"{metrics_A_s3['conf_matrix']}\n")
         f.write("\nTest Classification Report:\n")
         f.write(f"{metrics_A_s3['class_report']}\n\n\n")
-        f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s3:.3f} ± {empirical_chance_std_A_s3:.3f}\n\n\n")
+        # f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s3:.3f} ± {empirical_chance_std_A_s3:.3f}\n\n\n")
 
 
         f.write("Results for Training on S1 + S2 and Test on S3\n")
@@ -120,7 +119,7 @@ def main():
         f.write(f"{metrics_B['conf_matrix']}\n")
         f.write("\nTest Classification Report:\n")
         f.write(f"{metrics_B['class_report']}\n\n\n")
-        f.write(f"Empirical Chance Level: {empirical_chance_mean_B:.3f} ± {empirical_chance_std_B:.3f}\n\n\n")
+        # f.write(f"Empirical Chance Level: {empirical_chance_mean_B:.3f} ± {empirical_chance_std_B:.3f}\n\n\n")
 
 
 if __name__ == "__main__":
