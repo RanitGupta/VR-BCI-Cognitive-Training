@@ -44,7 +44,11 @@ def get_stream_indices(streams, name_data, name_trig):
     return i_data, i_trig
 
 
-def extract_eeg(folder_name):
+def extract_eeg(folder_name, fif_name=None):
+
+    # if fif_name exist in directroy:
+    #     load the data
+    #     continue
     
     files = [f for f in os.listdir(folder_name) if f.endswith(".xdf")]
 
@@ -104,6 +108,10 @@ def extract_eeg(folder_name):
         }
         color_dict = {event: color for event, color in zip(unique_events, plt.cm.viridis(np.linspace(0, 1, len(unique_events))))}
         # mne.viz.plot_events(events, sfreq=sfreq, color=color_dict, event_id=event_dict, on_missing='warn')
+
+        # stim1_samples = events[events[:, 2] == 14][:, 0]  # Sample indices for Stimulus 1
+        # stim2_samples = events[events[:, 2] == 30][:, 0]  # Sample indices for Stimulus 2
+        # print(stim2_samples - stim1_samples)
         
         # Create epochs for event_id 14
         epochs = mne.Epochs(
@@ -202,8 +210,11 @@ def plot_topoplots(go_epochs, nogo_epochs):
     plt.show()
     
 def preprocess(all_go_epochs, all_nogo_epochs):
+    
+    ''' apply temporal and spatial filters (and ICA) '''
+
     '''
-    # Artifact removal 
+    # [Optional] Artifact removal 
     # Fit ICA on the epochs (this will work best if you have a good amount of data)
     ica = ICA(n_components=20, random_state=97, max_iter=800)
     ica.fit(all_go_epochs)  # Fit ICA on Go epochs
@@ -220,8 +231,9 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     print("ICA applied.")
     '''
 
-    ''' apply temporal and spatial filters '''
-    
+    # plot the effect of temporal and spatial filters
+    # vis_filter(all_go_epochs, all_nogo_epochs, subj="all")
+
     # Bandpass filter
     all_go_epochs.filter(l_freq=0.1, h_freq=1)
     all_nogo_epochs.filter(l_freq=0.1, h_freq=1)
@@ -236,8 +248,8 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     return all_go_epochs, all_nogo_epochs
 
 
-def downsample_data(X, factor=2, pca=False, n_components=None):
-    """
+def downsample_data(X_train, X_test, factor=2, pca=False, n_components=None):
+    '''
     Downsamples the EEG data and applies PCA for dimensionality reduction.
     
     Parameters:
@@ -248,33 +260,41 @@ def downsample_data(X, factor=2, pca=False, n_components=None):
     
     Returns:
     - X_transformed: ndarray of shape (n_samples, n_channels_reduced, n_times_downsampled)
-    """
+    '''
     # Downsample the time dimension
-    X_downsampled = X[:, :, ::factor]
+    X_train_downsampled = X_train[:, :, ::factor]
+    X_test_downsampled = X_test[:, :, ::factor]
     
-    n_samples, n_channels, n_times = X_downsampled.shape
-    X_transformed = np.zeros((n_samples, n_components if n_components else n_channels, n_times))
+    n_samples_train, n_channels, n_times = X_train_downsampled.shape
+    n_samples_test = X_test_downsampled.shape[0]
+
+    if not pca:
+        return X_train_downsampled, X_test_downsampled
+
+    X_train_transformed = np.zeros((n_samples_train, n_components, n_times))
+    X_test_transformed = np.zeros((n_samples_test, n_components, n_times))
     
     # Apply PCA to each time slice across channels
-    if pca:
-        for t in range(n_times):
-            # Extract the data for all samples at time t
-            time_slice = X_downsampled[:, :, t]  # Shape: (n_samples, n_channels)
-            
-            # Standardize the data across samples
-            scaler = StandardScaler()
-            time_slice_standardized = scaler.fit_transform(time_slice)
-            
-            # Apply PCA
-            pca = PCA(n_components=n_components)
-            reduced = pca.fit_transform(time_slice_standardized)  # Shape: (n_samples, n_components)
-            
-            # Assign reduced data back
-            X_transformed[:, :, t] = reduced
-    
-        return X_transformed
-        
-    return X_downsampled
+    for t in range(n_times):
+        # Extract the data for all samples at time t
+        time_slice_train = X_train_downsampled[:, :, t]  # Shape: (n_samples_train, n_channels)
+        time_slice_test = X_test_downsampled[:, :, t]    # Shape: (n_samples_test, n_channels)
+
+        # Standardize the data across samples using training data parameters
+        scaler = StandardScaler()
+        time_slice_train_standardized = scaler.fit_transform(time_slice_train)
+        time_slice_test_standardized = scaler.transform(time_slice_test)
+
+        # Apply PCA trained on training data
+        pca_model = PCA(n_components=n_components)
+        reduced_train = pca_model.fit_transform(time_slice_train_standardized)  # Shape: (n_samples_train, n_components)
+        reduced_test = pca_model.transform(time_slice_test_standardized)        # Shape: (n_samples_test, n_components)
+
+        # Assign reduced data back
+        X_train_transformed[:, :, t] = reduced_train
+        X_test_transformed[:, :, t] = reduced_test
+
+    return X_train_transformed, X_test_transformed
 
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
@@ -323,8 +343,7 @@ def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test,
     y_train = y_train[indices]
 
     # Downsample
-    X_train = downsample_data(X_train, factor=time_ds_factor, pca=use_pca, n_components=n_components)
-    X_test = downsample_data(X_test, factor=time_ds_factor, pca=use_pca, n_components=n_components)
+    X_train, X_test = downsample_data(X_train, X_test, factor=time_ds_factor, pca=use_pca, n_components=n_components)
 
     # Flatten along the time axis
     n_samples_train, n_channels, n_times_train = X_train.shape
@@ -436,8 +455,10 @@ def run_model(X, y, mdl='svm', n_splits = 4):
     # Compute the average accuracy across all folds
     avg_accuracy = np.mean(accuracies)
 
+    model_full_train = model.fit(X, y)
+
     # print(f"\nAverage accuracy across {n_splits} folds: {avg_accuracy:.2f}")
-    return best_model, avg_accuracy, classification_reports, confusion_matrices
+    return model_full_train, avg_accuracy, classification_reports, confusion_matrices
 
 
 def evaluate_model(y_test, y_pred):
@@ -452,6 +473,76 @@ def feature_extraction(X):
     ''' extract significant features to improve model performance '''
     pass
 
-def chance_level(X, y):
+def compute_empirical_chance(X, y, clf, n_iterations=100):
+    from sklearn.model_selection import cross_val_score
+
     ''' compute chance level calculation '''
-    pass    
+    print("running chance level ...")    
+    chance_scores = []
+    for i in range(n_iterations):
+
+        print(f"iteration {i}")
+
+        # Randomly permute labels
+        y_permuted = np.random.permutation(y)
+
+        scores = cross_val_score(clf, X, y_permuted, cv=5)
+
+        chance_scores.append(np.mean(scores))
+    
+    empirical_chance_mean, empirical_chance_std = np.mean(chance_scores), np.std(chance_scores)
+    # print(f"Empirical Chance Level: {empirical_chance_mean:.3f} ± {empirical_chance_std:.3f}")
+    
+    return empirical_chance_mean, empirical_chance_std
+
+def vis_filter(all_go_epochs, all_nogo_epochs, subj):
+    # Average the concatenated epochs
+    go_evoked_no_filter = all_go_epochs.average()
+    nogo_evoked_no_filter = all_nogo_epochs.average()
+
+    # Apply bandpass filter
+    go_evoked_bandpass = go_evoked_no_filter.copy().filter(l_freq=1, h_freq=40)
+    nogo_evoked_bandpass = nogo_evoked_no_filter.copy().filter(l_freq=1, h_freq=40)
+
+    # Apply bandpass + spatial filter (e.g., Laplacian or custom)
+    go_evoked_bandpass_spatial = go_evoked_bandpass.copy().set_eeg_reference(ref_channels="average")
+    nogo_evoked_bandpass_spatial = nogo_evoked_bandpass.copy().set_eeg_reference(ref_channels="average")
+
+    filter_titles = ["No Filter", "Bandpass", "Bandpass + Spatial"]
+
+    # Prepare subplots
+    fig, axs = plt.subplots(2, 3, figsize=(15, 8), sharex=True, sharey=True)
+
+    # Plotting Go ERPs
+    print("\nPlot Go ERP")
+    axs[0, 0].plot(go_evoked_no_filter.times, go_evoked_no_filter.data[0], color="black")
+    axs[0, 0].set_title(f"Go ({filter_titles[0]})")
+
+    axs[0, 1].plot(go_evoked_bandpass.times, go_evoked_bandpass.data[0], color="black")
+    axs[0, 1].set_title(f"Go ({filter_titles[1]})")
+
+    axs[0, 2].plot(go_evoked_bandpass_spatial.times, go_evoked_bandpass_spatial.data[0], color="black")
+    axs[0, 2].set_title(f"Go ({filter_titles[2]})")
+
+    # Plotting NoGo ERPs
+    print("\nPlot NoGo ERP")
+    axs[1, 0].plot(nogo_evoked_no_filter.times, nogo_evoked_no_filter.data[0], color="black")
+    axs[1, 0].set_title(f"NoGo ({filter_titles[0]})")
+
+    axs[1, 1].plot(nogo_evoked_bandpass.times, nogo_evoked_bandpass.data[0], color="black")
+    axs[1, 1].set_title(f"NoGo ({filter_titles[1]})")
+
+    axs[1, 2].plot(nogo_evoked_bandpass_spatial.times, nogo_evoked_bandpass_spatial.data[0], color="black")
+    axs[1, 2].set_title(f"NoGo ({filter_titles[2]})")
+
+    # Add labels and formatting
+    for ax in axs.flat:
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude (μV)")
+        ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)  # Add a baseline
+        ax.axvline(0, color="gray", linestyle="--", linewidth=0.8)  # Mark event onset
+
+    plt.tight_layout()
+    save_dir = "figures"
+    plt.savefig(f"{save_dir}/{subj}_erp_comparison.png", dpi=300)  # Save the figure as PNG
+    plt.show()
