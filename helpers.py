@@ -46,10 +46,16 @@ def get_stream_indices(streams, name_data, name_trig):
 
 def extract_eeg(folder_name, fif_name=None):
 
-    # if fif_name exist in directroy:
-    #     load the data
-    #     continue
-    
+    # Check if the FIF file already exists
+    if os.path.exists(fif_name):
+        print(f"File {fif_name} already exists. Loading data.")
+        epochs = mne.read_epochs(fif_name, preload=True)
+        
+        # Distinguish between Go and NoGo based on event IDs
+        go_epochs = epochs["Go"]
+        nogo_epochs = epochs["NoGo"]
+        return go_epochs, nogo_epochs
+
     files = [f for f in os.listdir(folder_name) if f.endswith(".xdf")]
 
     all_go_epochs = []
@@ -67,7 +73,7 @@ def extract_eeg(folder_name, fif_name=None):
         data_times = np.array(streams[i_data]["time_stamps"])
 
         # Extract event markers and interpolate
-        trig = np.array(streams[i_trig]["time_series"][:,0]).astype(int)
+        trig = np.array(streams[i_trig]["time_series"][:, 0]).astype(int)
         trig_times = np.array(streams[i_trig]["time_stamps"])
         interp_func = interp1d(trig_times, trig.flatten(), kind='nearest', fill_value="extrapolate")
         trigger_resampled = interp_func(np.arange(len(data[0])) / sfreq + data_times[0])
@@ -80,39 +86,19 @@ def extract_eeg(folder_name, fif_name=None):
         info = mne.create_info(
             ch_names=channel_names,
             sfreq=sfreq,
-            ch_types=n_chan*['eeg'] + ['stim']
+            ch_types=n_chan * ['eeg'] + ['stim']
         )
         raw_data = mne.io.RawArray(data_with_trigger, info)
 
         # Common average reference
         raw_data, ref_data = mne.set_eeg_reference(raw_data)
-        
+
         # Manually create events array from trigger channel
         trig_diff = np.diff(trigger_resampled)
         events_indices = np.where(trig_diff != 0)[0] + 1
         events = np.column_stack((events_indices, np.zeros(len(events_indices)), trigger_resampled[events_indices].astype(int)))
         events = events.astype(int)
-        
-        # Plot events
-        unique_events = np.unique(events[:, 2])
-        event_colors = dict(zip(unique_events, plt.cm.viridis(np.linspace(0, 1, len(unique_events)))))
-        event_dict = {
-            "Trial start - NoGo": 6,
-            "Trial start - Go": 7,
-            "Stimulus 1": 14,
-            "Stimulus 2": 30,
-            "Subject response": 62,
-            "Feedback": 158,
-            "Classification - NoGo": 160,
-            "Classification - Go": 170
-        }
-        color_dict = {event: color for event, color in zip(unique_events, plt.cm.viridis(np.linspace(0, 1, len(unique_events))))}
-        # mne.viz.plot_events(events, sfreq=sfreq, color=color_dict, event_id=event_dict, on_missing='warn')
 
-        # stim1_samples = events[events[:, 2] == 14][:, 0]  # Sample indices for Stimulus 1
-        # stim2_samples = events[events[:, 2] == 30][:, 0]  # Sample indices for Stimulus 2
-        # print(stim2_samples - stim1_samples)
-        
         # Create epochs for event_id 14
         epochs = mne.Epochs(
             raw_data,
@@ -121,14 +107,15 @@ def extract_eeg(folder_name, fif_name=None):
             tmin=-1.0,
             tmax=4.0,
             baseline=(None, 0),
-            preload=True)
+            preload=True
+        )
 
         # Identify trials where event 14 follows a 7 (Go) or 6 (NoGo)
         go_trials = [i for i in range(len(events) - 1) if events[i, 2] == 7 and events[i + 1, 2] == 14]
         nogo_trials = [i for i in range(len(events) - 1) if events[i, 2] == 6 and events[i + 1, 2] == 14]
         go_trials = [epochs.selection.tolist().index(i + 1) for i in go_trials if i + 1 in epochs.selection]
         nogo_trials = [epochs.selection.tolist().index(i + 1) for i in nogo_trials if i + 1 in epochs.selection]
-        go_epochs = epochs[go_trials] # (n_trials x n_channels x n_samples)
+        go_epochs = epochs[go_trials]  # (n_trials x n_channels x n_samples)
         nogo_epochs = epochs[nogo_trials]
         all_go_epochs.append(go_epochs)
         all_nogo_epochs.append(nogo_epochs)
@@ -154,7 +141,20 @@ def extract_eeg(folder_name, fif_name=None):
     all_go_epochs.set_montage(montage)
     all_nogo_epochs.set_montage(montage)
 
+    # Combine and add annotations for differentiation
+    all_epochs = mne.concatenate_epochs([all_go_epochs, all_nogo_epochs])
+    all_epochs.events[:, 2] = np.hstack([
+        np.full(len(all_go_epochs), 1),  # Label 'Go' epochs as 1
+        np.full(len(all_nogo_epochs), 2)  # Label 'NoGo' epochs as 2
+    ])
+    all_epochs.event_id = {"Go": 1, "NoGo": 2}
+
+    # Save the combined epochs
+    all_epochs.save(fif_name, overwrite=True)
+    print(f"Data saved to {fif_name}")
+
     return all_go_epochs, all_nogo_epochs
+
 
 
 def plot_cnv_averages(go_epochs, nogo_epochs):

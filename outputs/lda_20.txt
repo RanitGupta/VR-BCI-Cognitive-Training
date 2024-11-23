@@ -1,4 +1,14 @@
-Model Type: lda
+GENERAL MODEL (ALL SUBJECTS)
+----------------------------------------------------
+Decoder: lda
+PCA: True
+  N_Channels: 20
+Time Downsample Factor: 4
+Num. Folds for K-Folds: 4
+
+INDIVIDUAL MODEL
+----------------------------------------------------
+Decoder: lda
 PCA: True
   N_Channels: 20
 Time Downsample Factor: 4
@@ -8,11 +18,29 @@ Num. Folds for K-Folds: 4
 Results for Training on S1 and Test on S2
 ----------------------------------------------------
 Avg. Fold Train Accuracy: 75.42%
+  Avg. Fold Train Accuracy SUBJECT JH: 66.67%
+  Avg. Fold Train Accuracy SUBJECT RN: 70.83%
+  Avg. Fold Train Accuracy SUBJECT TR: 68.06%
 Test Accuracy: 61.11%
+  Test Accuracy SUBJECT JH: 48.61%
+  Test Accuracy SUBJECT RN: 76.39%
+  Test Accuracy SUBJECT TR: 61.11%
 
 Test Confusion Matrix:
 [[43 65]
  [19 89]]
+
+ Test Confusion Matrix SUBJECT JH:
+  [[ 4 32]
+ [ 5 31]]
+
+ Test Confusion Matrix SUBJECT RN:
+  [[23 13]
+ [ 4 32]]
+
+ Test Confusion Matrix SUBJECT TR:
+  [[15 21]
+ [ 7 29]]
 
 Test Classification Report:
               precision    recall  f1-score   support
@@ -25,15 +53,66 @@ Test Classification Report:
 weighted avg       0.64      0.61      0.59       216
 
 
+ Test Classification Report SUBJECT JH:
+                precision    recall  f1-score   support
+
+           0       0.44      0.11      0.18        36
+           1       0.49      0.86      0.63        36
+
+    accuracy                           0.49        72
+   macro avg       0.47      0.49      0.40        72
+weighted avg       0.47      0.49      0.40        72
+
+
+ Test Classification Report SUBJECT RN:
+                precision    recall  f1-score   support
+
+           0       0.85      0.64      0.73        36
+           1       0.71      0.89      0.79        36
+
+    accuracy                           0.76        72
+   macro avg       0.78      0.76      0.76        72
+weighted avg       0.78      0.76      0.76        72
+
+
+ Test Classification Report SUBJECT TR:
+                precision    recall  f1-score   support
+
+           0       0.68      0.42      0.52        36
+           1       0.58      0.81      0.67        36
+
+    accuracy                           0.61        72
+   macro avg       0.63      0.61      0.60        72
+weighted avg       0.63      0.61      0.60        72
+
+
 
 Results for Training on S1 and Test on S3
 ----------------------------------------------------
 Avg. Fold Train Accuracy: 75.42%
+  Avg. Fold Train Accuracy SUBJECT JH: 66.67%
+  Avg. Fold Train Accuracy SUBJECT RN: 70.83%
+  Avg. Fold Train Accuracy SUBJECT TR: 68.06%
 Test Accuracy: 65.74%
+  Test Accuracy SUBJECT JH: 65.28%
+  Test Accuracy SUBJECT RN: 59.72%
+  Test Accuracy SUBJECT TR: 65.28%
 
 Test Confusion Matrix:
 [[52 56]
  [18 90]]
+
+ Test Confusion Matrix SUBJECT JH:
+  [[13 23]
+ [ 2 34]]
+
+ Test Confusion Matrix SUBJECT RN:
+  [[18 18]
+ [11 25]]
+
+ Test Confusion Matrix SUBJECT TR:
+  [[18 18]
+ [ 7 29]]
 
 Test Classification Report:
               precision    recall  f1-score   support
@@ -46,15 +125,66 @@ Test Classification Report:
 weighted avg       0.68      0.66      0.65       216
 
 
+ Test Classification Report SUBJECT JH:
+                precision    recall  f1-score   support
+
+           0       0.87      0.36      0.51        36
+           1       0.60      0.94      0.73        36
+
+    accuracy                           0.65        72
+   macro avg       0.73      0.65      0.62        72
+weighted avg       0.73      0.65      0.62        72
+
+
+ Test Classification Report SUBJECT RN:
+                precision    recall  f1-score   support
+
+           0       0.62      0.50      0.55        36
+           1       0.58      0.69      0.63        36
+
+    accuracy                           0.60        72
+   macro avg       0.60      0.60      0.59        72
+weighted avg       0.60      0.60      0.59        72
+
+
+ Test Classification Report SUBJECT TR:
+                precision    recall  f1-score   support
+
+           0       0.72      0.50      0.59        36
+           1       0.62      0.81      0.70        36
+
+    accuracy                           0.65        72
+   macro avg       0.67      0.65      0.64        72
+weighted avg       0.67      0.65      0.64        72
+
+
 
 Results for Training on S1 + S2 and Test on S3
 ----------------------------------------------------
 Avg. Fold Train Accuracy: 73.90%
+  Avg. Fold Train Accuracy SUBJECT JH: 62.50%
+  Avg. Fold Train Accuracy SUBJECT RN: 64.88%
+  Avg. Fold Train Accuracy SUBJECT TR: 79.17%
 Test Accuracy: 72.69%
+  Test Accuracy SUBJECT JH: 58.33%
+  Test Accuracy SUBJECT RN: 70.83%
+  Test Accuracy SUBJECT TR: 80.56%
 
 Test Confusion Matrix:
 [[70 38]
  [21 87]]
+
+ Test Confusion Matrix SUBJECT JH:
+  [[26 10]
+ [20 16]]
+
+ Test Confusion Matrix SUBJECT RN:
+  [[26 10]
+ [11 25]]
+
+ Test Confusion Matrix SUBJECT TR:
+  [[29  7]
+ [ 7 29]]
 
 Test Classification Report:
               precision    recall  f1-score   support
@@ -67,4 +197,34 @@ Test Classification Report:
 weighted avg       0.73      0.73      0.73       216
 
 
+ Test Classification Report SUBJECT JH:
+                precision    recall  f1-score   support
 
+           0       0.57      0.72      0.63        36
+           1       0.62      0.44      0.52        36
+
+    accuracy                           0.58        72
+   macro avg       0.59      0.58      0.58        72
+weighted avg       0.59      0.58      0.58        72
+
+
+ Test Classification Report SUBJECT RN:
+                precision    recall  f1-score   support
+
+           0       0.70      0.72      0.71        36
+           1       0.71      0.69      0.70        36
+
+    accuracy                           0.71        72
+   macro avg       0.71      0.71      0.71        72
+weighted avg       0.71      0.71      0.71        72
+
+
+ Test Classification Report SUBJECT TR:
+                precision    recall  f1-score   support
+
+           0       0.81      0.81      0.81        36
+           1       0.81      0.81      0.81        36
+
+    accuracy                           0.81        72
+   macro avg       0.81      0.81      0.81        72
+weighted avg       0.81      0.81      0.81        72
