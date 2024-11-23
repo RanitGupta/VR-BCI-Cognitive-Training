@@ -47,7 +47,7 @@ def main():
     test_pth_B_rn = Path(r"data/test_B_rn")               # ses3
     test_pth_B_tr = Path(r"data/test_B_tr")               # ses3
 
-    # train data
+    # train data load (use .fif if exists else create new)
     all_go_epochs_train_A, all_nogo_epochs_train_A = extract_eeg(folder_name=train_pth_A, fif_name=Path(r"loaded_data/train_A.fif"))
     all_go_epochs_train_A_jh, all_nogo_epochs_train_A_jh = extract_eeg(folder_name=train_pth_A_jh, fif_name=Path(r"loaded_data/train_A_jh.fif"))
     all_go_epochs_train_A_rn, all_nogo_epochs_train_A_rn = extract_eeg(folder_name=train_pth_A_rn, fif_name=Path(r"loaded_data/train_A_rn.fif"))
