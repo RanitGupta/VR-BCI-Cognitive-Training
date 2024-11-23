@@ -22,6 +22,8 @@ def main():
 
     # train data
     all_go_epochs_train_A, all_nogo_epochs_train_A = extract_eeg(train_pth_A)
+    print(all_go_epochs_train_A)
+    return
     all_go_epochs_train_B, all_nogo_epochs_train_B = extract_eeg(train_pth_B)
  
     # test data
