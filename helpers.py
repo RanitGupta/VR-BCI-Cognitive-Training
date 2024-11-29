@@ -304,27 +304,40 @@ def moving_average(signal, window_size):
     return np.convolve(signal, np.ones(window_size) / window_size, mode='valid')
 
 def window_average(epochs, window_size):
-
-    # get raw data (shape: n_epochs, n_channels, n_times)
+    # Get raw data (shape: n_epochs, n_channels, n_times)
     data = epochs.get_data()
     n_epochs, n_channels, n_times = data.shape
 
-    crop_start = 1690 # to start at 2.3 s (orig at [-1, 5] s, so a delta of 3.3s * 512 ~ 1690)
-    crop_end = 2714 # to end at 4.3 s (orig at [-1, 5] s, so a delta of 5.3s * 512 ~ 2714)
-    smoothed_data = np.zeros((n_epochs, n_channels, crop_end - crop_start - window_size + 1))
-    
-    # Apply moving average per epoch, channel
+    crop_start = 1690  # Start index (2.3 s)
+    crop_end = 2714  # End index (4.3 s)
+    crop_length = crop_end - crop_start
+
+    # Preallocate with generic length; adjust later
+    smoothed_data = []
+
+    # Apply moving average per epoch and channel
     for i_epoch in range(n_epochs):
+        epoch_data = []
         for i_channel in range(n_channels):
-            signal = data[i_epoch, i_channel, crop_start:crop_end] # extract 2.3 to 4.3 period
-            smoothed_data[i_epoch, i_channel] = moving_average(signal, window_size)
-    
-    # make new epoch object
+            signal = data[i_epoch, i_channel, crop_start:crop_end]  # Extract 2.3 to 4.3 period
+            smoothed_signal = moving_average(signal, window_size)
+            epoch_data.append(smoothed_signal)
+        smoothed_data.append(epoch_data)
+
+    # Convert smoothed data to a numpy array
+    smoothed_data = np.array(smoothed_data)
+
+    # Ensure smoothed_data has consistent dimensions
+    n_times_smoothed = smoothed_data.shape[2]
+    print(f"Smoothed data shape: {smoothed_data.shape}, Expected time steps: {n_times_smoothed}")
+
+    # Make new epoch object
     info = epochs.info
-    times = epochs.times[:smoothed_data.shape[2]]  # Adjust time array for new length
-    updated_epochs = mne.EpochsArray(smoothed_data, info, tmin=times[0])
+    new_times = epochs.times[:n_times_smoothed]  # Adjust time array for new length
+    updated_epochs = mne.EpochsArray(smoothed_data, info, tmin=new_times[0])
 
     return updated_epochs
+
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
     """
