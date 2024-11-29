@@ -104,8 +104,8 @@ def extract_eeg(folder_name, fif_name=None):
             raw_data,
             events,
             event_id={"Stimulus 1": 14},
-            tmin=-1.0,
-            tmax=4.0,
+            tmin=-1,
+            tmax=5,
             baseline=(None, 0),
             preload=True
         )
@@ -245,6 +245,10 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     all_go_epochs.apply_proj()
     all_nogo_epochs.apply_proj()
 
+    # apply window averaging and cropping to 2.3s -> 4.3s window
+    all_go_epochs = window_average(all_go_epochs, 50)
+    all_nogo_epochs = window_average(all_nogo_epochs, 50)
+
     return all_go_epochs, all_nogo_epochs
 
 
@@ -296,6 +300,31 @@ def downsample_data(X_train, X_test, factor=2, pca=False, n_components=None):
 
     return X_train_transformed, X_test_transformed
 
+def moving_average(signal, window_size):
+    return np.convolve(signal, np.ones(window_size) / window_size, mode='valid')
+
+def window_average(epochs, window_size):
+
+    # get raw data (shape: n_epochs, n_channels, n_times)
+    data = epochs.get_data()
+    n_epochs, n_channels, n_times = data.shape
+
+    crop_start = 1690 # to start at 2.3 s (orig at [-1, 5] s, so a delta of 3.3s * 512 ~ 1690)
+    crop_end = 2714 # to end at 4.3 s (orig at [-1, 5] s, so a delta of 5.3s * 512 ~ 2714)
+    smoothed_data = np.zeros((n_epochs, n_channels, crop_end - crop_start - window_size + 1))
+    
+    # Apply moving average per epoch, channel
+    for i_epoch in range(n_epochs):
+        for i_channel in range(n_channels):
+            signal = data[i_epoch, i_channel, crop_start:crop_end] # extract 2.3 to 4.3 period
+            smoothed_data[i_epoch, i_channel] = moving_average(signal, window_size)
+    
+    # make new epoch object
+    info = epochs.info
+    times = epochs.times[:smoothed_data.shape[2]]  # Adjust time array for new length
+    updated_epochs = mne.EpochsArray(smoothed_data, info, tmin=times[0])
+
+    return updated_epochs
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
     """
