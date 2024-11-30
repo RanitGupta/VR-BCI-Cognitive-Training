@@ -185,7 +185,7 @@ def main():
 
 
     # write results
-    with open(f"outputs/{MODEL}_{N_COMPONENTS}.txt", 'w') as f:
+    with open(f"outputs/{MODEL}_{N_COMPONENTS}_new.txt", 'w') as f:
         f.write("GENERAL MODEL (ALL SUBJECTS)\n")
         f.write("----------------------------------------------------\n")
         f.write(f"Decoder: {MODEL}\n")

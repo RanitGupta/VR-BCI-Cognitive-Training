@@ -104,8 +104,8 @@ def extract_eeg(folder_name, fif_name=None):
             raw_data,
             events,
             event_id={"Stimulus 1": 14},
-            tmin=-1.0,
-            tmax=4.0,
+            tmin=-1,
+            tmax=5,
             baseline=(None, 0),
             preload=True
         )
@@ -245,6 +245,10 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     all_go_epochs.apply_proj()
     all_nogo_epochs.apply_proj()
 
+    # apply window averaging and cropping to 2.3s -> 4.3s window
+    all_go_epochs = window_average(all_go_epochs, 50)
+    all_nogo_epochs = window_average(all_nogo_epochs, 50)
+
     return all_go_epochs, all_nogo_epochs
 
 
@@ -295,6 +299,44 @@ def downsample_data(X_train, X_test, factor=2, pca=False, n_components=None):
         X_test_transformed[:, :, t] = reduced_test
 
     return X_train_transformed, X_test_transformed
+
+def moving_average(signal, window_size):
+    return np.convolve(signal, np.ones(window_size) / window_size, mode='valid')
+
+def window_average(epochs, window_size):
+    # Get raw data (shape: n_epochs, n_channels, n_times)
+    data = epochs.get_data()
+    n_epochs, n_channels, n_times = data.shape
+
+    crop_start = 1690  # Start index (2.3 s)
+    crop_end = 2714  # End index (4.3 s)
+    crop_length = crop_end - crop_start
+
+    # Preallocate with generic length; adjust later
+    smoothed_data = []
+
+    # Apply moving average per epoch and channel
+    for i_epoch in range(n_epochs):
+        epoch_data = []
+        for i_channel in range(n_channels):
+            signal = data[i_epoch, i_channel, crop_start:crop_end]  # Extract 2.3 to 4.3 period
+            smoothed_signal = moving_average(signal, window_size)
+            epoch_data.append(smoothed_signal)
+        smoothed_data.append(epoch_data)
+
+    # Convert smoothed data to a numpy array
+    smoothed_data = np.array(smoothed_data)
+
+    # Ensure smoothed_data has consistent dimensions
+    n_times_smoothed = smoothed_data.shape[2]
+    print(f"Smoothed data shape: {smoothed_data.shape}, Expected time steps: {n_times_smoothed}")
+
+    # Make new epoch object
+    info = epochs.info
+    new_times = epochs.times[:n_times_smoothed]  # Adjust time array for new length
+    updated_epochs = mne.EpochsArray(smoothed_data, info, tmin=new_times[0])
+
+    return updated_epochs
 
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
