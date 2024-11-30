@@ -14,7 +14,20 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    accuracy_score,
+    confusion_matrix,
+    classification_report,
+    roc_auc_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    matthews_corrcoef,
+    cohen_kappa_score,
+    log_loss,
+    balanced_accuracy_score
+)
 import matplotlib.pyplot as plt
 
 import joblib
@@ -104,8 +117,8 @@ def extract_eeg(folder_name, fif_name=None):
             raw_data,
             events,
             event_id={"Stimulus 1": 14},
-            tmin=-1,
-            tmax=5,
+            tmin=-1.0,
+            tmax=4.0,
             baseline=(None, 0),
             preload=True
         )
@@ -246,8 +259,8 @@ def preprocess(all_go_epochs, all_nogo_epochs):
     all_nogo_epochs.apply_proj()
 
     # apply window averaging and cropping to 2.3s -> 4.3s window
-    all_go_epochs = window_average(all_go_epochs, 50)
-    all_nogo_epochs = window_average(all_nogo_epochs, 50)
+    # all_go_epochs = window_average(all_go_epochs, 50)
+    # all_nogo_epochs = window_average(all_nogo_epochs, 50)
 
     return all_go_epochs, all_nogo_epochs
 
@@ -299,7 +312,7 @@ def downsample_data(X_train, X_test, factor=2, pca=False, n_components=None):
         X_test_transformed[:, :, t] = reduced_test
 
     return X_train_transformed, X_test_transformed
-
+"""
 def moving_average(signal, window_size):
     return np.convolve(signal, np.ones(window_size) / window_size, mode='valid')
 
@@ -337,7 +350,7 @@ def window_average(epochs, window_size):
     updated_epochs = mne.EpochsArray(smoothed_data, info, tmin=new_times[0])
 
     return updated_epochs
-
+"""
 
 def prepare_data(all_go_epochs_train, all_nogo_epochs_train, all_go_epochs_test, all_nogo_epochs_test, time_ds_factor=2, use_pca=False, n_components=20):
     """
@@ -502,14 +515,36 @@ def run_model(X, y, mdl='svm', n_splits = 4):
     # print(f"\nAverage accuracy across {n_splits} folds: {avg_accuracy:.2f}")
     return model_full_train, avg_accuracy, classification_reports, confusion_matrices
 
-
-def evaluate_model(y_test, y_pred):
+def evaluate_model(y_test, y_pred, y_pred_prob=None):
+    # Basic metrics
     accuracy = accuracy_score(y_test, y_pred)
     conf_matrix = confusion_matrix(y_test, y_pred)
     class_report = classification_report(y_test, y_pred)
-
-    return {"accuracy": accuracy, "conf_matrix": conf_matrix, 'class_report' : class_report}
-
+    
+    # Advanced metrics
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    mcc = matthews_corrcoef(y_test, y_pred)
+    balanced_acc = balanced_accuracy_score(y_test, y_pred)
+    
+    # Confusion Matrix Components
+    tn, fp, fn, tp = conf_matrix.ravel()
+    tnr = tn / (tn + fp) if (tn + fp) > 0 else 0  # Specificity
+    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0  # False Positive Rate
+    
+    return {
+        "accuracy": accuracy,
+        "conf_matrix": conf_matrix,
+        "class_report": class_report,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "mcc": mcc,
+        "balanced_accuracy": balanced_acc,
+        "tnr": tnr,
+        "fpr": fpr
+    }
 
 def feature_extraction(X):
     ''' extract significant features to improve model performance '''
@@ -588,3 +623,81 @@ def vis_filter(all_go_epochs, all_nogo_epochs, subj):
     save_dir = "figures"
     plt.savefig(f"{save_dir}/{subj}_erp_comparison.png", dpi=300)  # Save the figure as PNG
     plt.show()
+
+
+def write_results_block(f, title, avg_accuracy, avg_accuracy_jh, avg_accuracy_rn, avg_accuracy_tr,
+                        metrics_overall, metrics_jh, metrics_rn, metrics_tr):
+    f.write(f"{title}\n")
+    f.write("----------------------------------------------------\n")
+    f.write(f"Avg. Fold Train Accuracy: {avg_accuracy * 100:.2f}%\n")
+    f.write(f"  Avg. Fold Train Accuracy SUBJECT JH: {avg_accuracy_jh * 100:.2f}%\n")
+    f.write(f"  Avg. Fold Train Accuracy SUBJECT RN: {avg_accuracy_rn * 100:.2f}%\n")
+    f.write(f"  Avg. Fold Train Accuracy SUBJECT TR: {avg_accuracy_tr * 100:.2f}%\n\n")
+
+    # Test Accuracy
+    f.write(f"Test Accuracy: {metrics_overall['accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Accuracy SUBJECT JH: {metrics_jh['accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Accuracy SUBJECT RN: {metrics_rn['accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Accuracy SUBJECT TR: {metrics_tr['accuracy'] * 100:.2f}%\n\n")
+
+    # Balanced Accuracy
+    f.write(f"Test Balanced Accuracy: {metrics_overall['balanced_accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Balanced Accuracy SUBJECT JH: {metrics_jh['balanced_accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Balanced Accuracy SUBJECT RN: {metrics_rn['balanced_accuracy'] * 100:.2f}%\n")
+    f.write(f"  Test Balanced Accuracy SUBJECT TR: {metrics_tr['balanced_accuracy'] * 100:.2f}%\n\n")
+
+    # Precision
+    f.write(f"Test Precision: {metrics_overall['precision'] * 100:.2f}%\n")
+    f.write(f"  Test Precision SUBJECT JH: {metrics_jh['precision'] * 100:.2f}%\n")
+    f.write(f"  Test Precision SUBJECT RN: {metrics_rn['precision'] * 100:.2f}%\n")
+    f.write(f"  Test Precision SUBJECT TR: {metrics_tr['precision'] * 100:.2f}%\n\n")
+
+    # Recall
+    f.write(f"Test Recall: {metrics_overall['recall'] * 100:.2f}%\n")
+    f.write(f"  Test Recall SUBJECT JH: {metrics_jh['recall'] * 100:.2f}%\n")
+    f.write(f"  Test Recall SUBJECT RN: {metrics_rn['recall'] * 100:.2f}%\n")
+    f.write(f"  Test Recall SUBJECT TR: {metrics_tr['recall'] * 100:.2f}%\n\n")
+
+    # F1 Score
+    f.write(f"Test F1 Score: {metrics_overall['f1'] * 100:.2f}%\n")
+    f.write(f"  Test F1 Score SUBJECT JH: {metrics_jh['f1'] * 100:.2f}%\n")
+    f.write(f"  Test F1 Score SUBJECT RN: {metrics_rn['f1'] * 100:.2f}%\n")
+    f.write(f"  Test F1 Score SUBJECT TR: {metrics_tr['f1'] * 100:.2f}%\n\n")
+
+    # Matthews Correlation Coefficient (MCC)
+    f.write(f"Test Matthews Correlation Coefficient (MCC): {metrics_overall['mcc']:.4f}\n")
+    f.write(f"  Test MCC SUBJECT JH: {metrics_jh['mcc']:.4f}\n")
+    f.write(f"  Test MCC SUBJECT RN: {metrics_rn['mcc']:.4f}\n")
+    f.write(f"  Test MCC SUBJECT TR: {metrics_tr['mcc']:.4f}\n\n")
+
+    # True Negative Rate (TNR)
+    f.write(f"Test True Negative Rate (TNR): {metrics_overall['tnr'] * 100:.2f}%\n")
+    f.write(f"  Test TNR SUBJECT JH: {metrics_jh['tnr'] * 100:.2f}%\n")
+    f.write(f"  Test TNR SUBJECT RN: {metrics_rn['tnr'] * 100:.2f}%\n")
+    f.write(f"  Test TNR SUBJECT TR: {metrics_tr['tnr'] * 100:.2f}%\n\n")
+
+    # False Positive Rate (FPR)
+    f.write(f"Test False Positive Rate (FPR): {metrics_overall['fpr'] * 100:.2f}%\n")
+    f.write(f"  Test FPR SUBJECT JH: {metrics_jh['fpr'] * 100:.2f}%\n")
+    f.write(f"  Test FPR SUBJECT RN: {metrics_rn['fpr'] * 100:.2f}%\n")
+    f.write(f"  Test FPR SUBJECT TR: {metrics_tr['fpr'] * 100:.2f}%\n\n")
+
+    # Confusion Matrices
+    f.write("Test Confusion Matrix:\n")
+    f.write(f"{metrics_overall['conf_matrix']}\n\n")
+    f.write("Test Confusion Matrix SUBJECT JH:\n")
+    f.write(f"{metrics_jh['conf_matrix']}\n\n")
+    f.write("Test Confusion Matrix SUBJECT RN:\n")
+    f.write(f"{metrics_rn['conf_matrix']}\n\n")
+    f.write("Test Confusion Matrix SUBJECT TR:\n")
+    f.write(f"{metrics_tr['conf_matrix']}\n\n")
+
+    # Classification Reports
+    f.write("Test Classification Report:\n")
+    f.write(f"{metrics_overall['class_report']}\n")
+    f.write("Test Classification Report SUBJECT JH:\n")
+    f.write(f"{metrics_jh['class_report']}\n")
+    f.write("Test Classification Report SUBJECT RN:\n")
+    f.write(f"{metrics_rn['class_report']}\n")
+    f.write("Test Classification Report SUBJECT TR:\n")
+    f.write(f"{metrics_tr['class_report']}\n\n\n")
