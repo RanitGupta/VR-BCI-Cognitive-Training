@@ -1,11 +1,11 @@
-from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_model, compute_empirical_chance
+from helpers import extract_eeg, preprocess, prepare_data, run_model, evaluate_model, compute_empirical_chance, write_results_block
 from pathlib import Path
 import os
 
 # Set PARAMETRS HERE
 
 # GENERAL DECODER
-MODEL = 'lda'                       # classifier ('svm', 'rf', 'lda', 'xgb')
+MODEL = 'rf'                       # classifier ('svm', 'rf', 'lda', 'xgb')
 PCA, N_COMPONENTS = True, 20        # PCA downsampling
 TIME_DOWNSAMPLE_FACTOR = 4          # Time downsampling factor
 N_FOLDS = 4                         # num. folds for K_folds
@@ -16,7 +16,6 @@ N_FOLDS = 4                         # num. folds for K_folds
 # INDIV_PCA, INDIV_N_COMPONENTS = True, 20        # PCA downsampling
 # INDIV_TIME_DOWNSAMPLE_FACTOR = 4          # Time downsampling factor
 # N_FOLDS = 4                         # num. folds for K_folds
-
 
 def main():
 
@@ -184,8 +183,8 @@ def main():
     metrics_B_tr = evaluate_model(y_test_B_tr, y_pred_B_tr)
 
 
-    # write results
-    with open(f"outputs/{MODEL}_{N_COMPONENTS}_new.txt", 'w') as f:
+    with open(f"outputs/{MODEL}_{N_COMPONENTS}.txt", 'w') as f:
+        # Write general information
         f.write("GENERAL MODEL (ALL SUBJECTS)\n")
         f.write("----------------------------------------------------\n")
         f.write(f"Decoder: {MODEL}\n")
@@ -199,106 +198,51 @@ def main():
         f.write("----------------------------------------------------\n")
         f.write(f"Decoder: {MODEL}\n")
         f.write(f"PCA: {PCA}\n")
-        N_channels = N_COMPONENTS if PCA else "ALL"
         f.write(f"  N_Channels: {N_channels}\n")
         f.write(f"Time Downsample Factor: {TIME_DOWNSAMPLE_FACTOR}\n")
         f.write(f"Num. Folds for K-Folds: {N_FOLDS}\n\n\n")
 
-        f.write("Results for Training on S1 and Test on S2\n")
-        f.write("----------------------------------------------------\n")
-        f.write(f"Avg. Fold Train Accuracy: {avg_accuracy_A * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT JH: {avg_accuracy_A_jh * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT RN: {avg_accuracy_A_rn * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT TR: {avg_accuracy_A_tr * 100:.2f}%\n")
+        # Write results for Training on S1 and Test on S2
+        write_results_block(
+            f,
+            title="Results for Training on S1 and Test on S2",
+            avg_accuracy=avg_accuracy_A,
+            avg_accuracy_jh=avg_accuracy_A_jh,
+            avg_accuracy_rn=avg_accuracy_A_rn,
+            avg_accuracy_tr=avg_accuracy_A_tr,
+            metrics_overall=metrics_A_s2,
+            metrics_jh=metrics_A_s2_jh,
+            metrics_rn=metrics_A_s2_rn,
+            metrics_tr=metrics_A_s2_tr
+        )
 
-        f.write(f"Test Accuracy: {metrics_A_s2['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT JH: {metrics_A_s2_jh['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT RN: {metrics_A_s2_rn['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT TR: {metrics_A_s2_tr['accuracy'] * 100:.2f}%\n")
-       
-        f.write("\nTest Confusion Matrix:\n")
-        f.write(f"{metrics_A_s2['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT JH:\n")
-        f.write(f"  {metrics_A_s2_jh['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT RN:\n")
-        f.write(f"  {metrics_A_s2_rn['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT TR:\n")
-        f.write(f"  {metrics_A_s2_tr['conf_matrix']}\n")
+        # Write results for Training on S1 and Test on S3
+        write_results_block(
+            f,
+            title="Results for Training on S1 and Test on S3",
+            avg_accuracy=avg_accuracy_A,
+            avg_accuracy_jh=avg_accuracy_A_jh,
+            avg_accuracy_rn=avg_accuracy_A_rn,
+            avg_accuracy_tr=avg_accuracy_A_tr,
+            metrics_overall=metrics_A_s3,
+            metrics_jh=metrics_A_s3_jh,
+            metrics_rn=metrics_A_s3_rn,
+            metrics_tr=metrics_A_s3_tr
+        )
 
-        f.write("\nTest Classification Report:\n")
-        f.write(f"{metrics_A_s2['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT JH:\n")
-        f.write(f"  {metrics_A_s2_jh['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT RN:\n")
-        f.write(f"  {metrics_A_s2_rn['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT TR:\n")
-        f.write(f"  {metrics_A_s2_tr['class_report']}\n\n\n")
-        # f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s2:.3f} ± {empirical_chance_std_A_s2:.3f}\n\n\n")
-
-
-        f.write("Results for Training on S1 and Test on S3\n")
-        f.write("----------------------------------------------------\n")
-        f.write(f"Avg. Fold Train Accuracy: {avg_accuracy_A * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT JH: {avg_accuracy_A_jh * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT RN: {avg_accuracy_A_rn * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT TR: {avg_accuracy_A_tr * 100:.2f}%\n")
-
-        f.write(f"Test Accuracy: {metrics_A_s3['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT JH: {metrics_A_s3_jh['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT RN: {metrics_A_s3_rn['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT TR: {metrics_A_s3_tr['accuracy'] * 100:.2f}%\n")
-
-        f.write("\nTest Confusion Matrix:\n")
-        f.write(f"{metrics_A_s3['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT JH:\n")
-        f.write(f"  {metrics_A_s3_jh['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT RN:\n")
-        f.write(f"  {metrics_A_s3_rn['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT TR:\n")
-        f.write(f"  {metrics_A_s3_tr['conf_matrix']}\n")
-
-        f.write("\nTest Classification Report:\n")
-        f.write(f"{metrics_A_s3['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT JH:\n")
-        f.write(f"  {metrics_A_s3_jh['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT RN:\n")
-        f.write(f"  {metrics_A_s3_rn['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT TR:\n")
-        f.write(f"  {metrics_A_s3_tr['class_report']}\n\n\n")
-        # f.write(f"Empirical Chance Level: {empirical_chance_mean_A_s3:.3f} ± {empirical_chance_std_A_s3:.3f}\n\n\n")
-
-
-        f.write("Results for Training on S1 + S2 and Test on S3\n")
-        f.write("----------------------------------------------------\n")
-        f.write(f"Avg. Fold Train Accuracy: {avg_accuracy_B * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT JH: {avg_accuracy_B_jh * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT RN: {avg_accuracy_B_rn * 100:.2f}%\n")
-        f.write(f"  Avg. Fold Train Accuracy SUBJECT TR: {avg_accuracy_B_tr * 100:.2f}%\n")
-
-        f.write(f"Test Accuracy: {metrics_B['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT JH: {metrics_B_jh['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT RN: {metrics_B_rn['accuracy'] * 100:.2f}%\n")
-        f.write(f"  Test Accuracy SUBJECT TR: {metrics_B_tr['accuracy'] * 100:.2f}%\n")
-
-        f.write("\nTest Confusion Matrix:\n")
-        f.write(f"{metrics_B['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT JH:\n")
-        f.write(f"  {metrics_B_jh['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT RN:\n")
-        f.write(f"  {metrics_B_rn['conf_matrix']}\n")
-        f.write("\n Test Confusion Matrix SUBJECT TR:\n")
-        f.write(f"  {metrics_B_tr['conf_matrix']}\n")
-
-        f.write("\nTest Classification Report:\n")
-        f.write(f"{metrics_B['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT JH:\n")
-        f.write(f"  {metrics_B_jh['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT RN:\n")
-        f.write(f"  {metrics_B_rn['class_report']}\n")
-        f.write("\n Test Classification Report SUBJECT TR:\n")
-        f.write(f"  {metrics_B_tr['class_report']}")
-        # f.write(f"Empirical Chance Level: {empirical_chance_mean_B:.3f} ± {empirical_chance_std_B:.3f}\n\n\n")
-
+        # Write results for Training on S1 + S2 and Test on S3
+        write_results_block(
+            f,
+            title="Results for Training on S1 + S2 and Test on S3",
+            avg_accuracy=avg_accuracy_B,
+            avg_accuracy_jh=avg_accuracy_B_jh,
+            avg_accuracy_rn=avg_accuracy_B_rn,
+            avg_accuracy_tr=avg_accuracy_B_tr,
+            metrics_overall=metrics_B,
+            metrics_jh=metrics_B_jh,
+            metrics_rn=metrics_B_rn,
+            metrics_tr=metrics_B_tr
+        )
 
 
 if __name__ == "__main__":
