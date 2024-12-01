@@ -1,0 +1,332 @@
+GENERAL MODEL (ALL SUBJECTS)
+----------------------------------------------------
+Decoder: xgb
+PCA: True
+  N_Channels: 20
+Time Downsample Factor: 4
+Num. Folds for K-Folds: 4
+
+INDIVIDUAL MODEL
+----------------------------------------------------
+Decoder: xgb
+PCA: True
+  N_Channels: 20
+Time Downsample Factor: 4
+Num. Folds for K-Folds: 4
+
+
+Results for Training on S1 and Test on S2
+----------------------------------------------------
+Avg. Fold Train Accuracy: 65.00%
+  Avg. Fold Train Accuracy SUBJECT JH: 62.50%
+  Avg. Fold Train Accuracy SUBJECT RN: 65.63%
+  Avg. Fold Train Accuracy SUBJECT TR: 69.44%
+
+Test Accuracy: 52.78%
+  Test Accuracy SUBJECT JH: 45.83%
+  Test Accuracy SUBJECT RN: 69.44%
+  Test Accuracy SUBJECT TR: 58.33%
+
+Test Balanced Accuracy: 52.78%
+  Test Balanced Accuracy SUBJECT JH: 45.83%
+  Test Balanced Accuracy SUBJECT RN: 69.44%
+  Test Balanced Accuracy SUBJECT TR: 58.33%
+
+Test Precision: 52.00%
+  Test Precision SUBJECT JH: 47.54%
+  Test Precision SUBJECT RN: 67.50%
+  Test Precision SUBJECT TR: 57.14%
+
+Test Recall: 72.22%
+  Test Recall SUBJECT JH: 80.56%
+  Test Recall SUBJECT RN: 75.00%
+  Test Recall SUBJECT TR: 66.67%
+
+Test F1 Score: 60.47%
+  Test F1 Score SUBJECT JH: 59.79%
+  Test F1 Score SUBJECT RN: 71.05%
+  Test F1 Score SUBJECT TR: 61.54%
+
+Test Matthews Correlation Coefficient (MCC): 0.0603
+  Test MCC SUBJECT JH: -0.1158
+  Test MCC SUBJECT RN: 0.3913
+  Test MCC SUBJECT TR: 0.1690
+
+Test True Negative Rate (TNR): 33.33%
+  Test TNR SUBJECT JH: 11.11%
+  Test TNR SUBJECT RN: 63.89%
+  Test TNR SUBJECT TR: 50.00%
+
+Test False Positive Rate (FPR): 66.67%
+  Test FPR SUBJECT JH: 88.89%
+  Test FPR SUBJECT RN: 36.11%
+  Test FPR SUBJECT TR: 50.00%
+
+Test Confusion Matrix:
+[[36 72]
+ [30 78]]
+
+Test Confusion Matrix SUBJECT JH:
+[[ 4 32]
+ [ 7 29]]
+
+Test Confusion Matrix SUBJECT RN:
+[[23 13]
+ [ 9 27]]
+
+Test Confusion Matrix SUBJECT TR:
+[[18 18]
+ [12 24]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.55      0.33      0.41       108
+           1       0.52      0.72      0.60       108
+
+    accuracy                           0.53       216
+   macro avg       0.53      0.53      0.51       216
+weighted avg       0.53      0.53      0.51       216
+
+Test Classification Report SUBJECT JH:
+              precision    recall  f1-score   support
+
+           0       0.36      0.11      0.17        36
+           1       0.48      0.81      0.60        36
+
+    accuracy                           0.46        72
+   macro avg       0.42      0.46      0.38        72
+weighted avg       0.42      0.46      0.38        72
+
+Test Classification Report SUBJECT RN:
+              precision    recall  f1-score   support
+
+           0       0.72      0.64      0.68        36
+           1       0.68      0.75      0.71        36
+
+    accuracy                           0.69        72
+   macro avg       0.70      0.69      0.69        72
+weighted avg       0.70      0.69      0.69        72
+
+Test Classification Report SUBJECT TR:
+              precision    recall  f1-score   support
+
+           0       0.60      0.50      0.55        36
+           1       0.57      0.67      0.62        36
+
+    accuracy                           0.58        72
+   macro avg       0.59      0.58      0.58        72
+weighted avg       0.59      0.58      0.58        72
+
+
+
+Results for Training on S1 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 65.00%
+  Avg. Fold Train Accuracy SUBJECT JH: 62.50%
+  Avg. Fold Train Accuracy SUBJECT RN: 65.63%
+  Avg. Fold Train Accuracy SUBJECT TR: 69.44%
+
+Test Accuracy: 60.65%
+  Test Accuracy SUBJECT JH: 51.39%
+  Test Accuracy SUBJECT RN: 54.17%
+  Test Accuracy SUBJECT TR: 59.72%
+
+Test Balanced Accuracy: 60.65%
+  Test Balanced Accuracy SUBJECT JH: 51.39%
+  Test Balanced Accuracy SUBJECT RN: 54.17%
+  Test Balanced Accuracy SUBJECT TR: 59.72%
+
+Test Precision: 59.06%
+  Test Precision SUBJECT JH: 50.88%
+  Test Precision SUBJECT RN: 54.05%
+  Test Precision SUBJECT TR: 58.14%
+
+Test Recall: 69.44%
+  Test Recall SUBJECT JH: 80.56%
+  Test Recall SUBJECT RN: 55.56%
+  Test Recall SUBJECT TR: 69.44%
+
+Test F1 Score: 63.83%
+  Test F1 Score SUBJECT JH: 62.37%
+  Test F1 Score SUBJECT RN: 54.79%
+  Test F1 Score SUBJECT TR: 63.29%
+
+Test Matthews Correlation Coefficient (MCC): 0.2163
+  Test MCC SUBJECT JH: 0.0342
+  Test MCC SUBJECT RN: 0.0834
+  Test MCC SUBJECT TR: 0.1982
+
+Test True Negative Rate (TNR): 51.85%
+  Test TNR SUBJECT JH: 22.22%
+  Test TNR SUBJECT RN: 52.78%
+  Test TNR SUBJECT TR: 50.00%
+
+Test False Positive Rate (FPR): 48.15%
+  Test FPR SUBJECT JH: 77.78%
+  Test FPR SUBJECT RN: 47.22%
+  Test FPR SUBJECT TR: 50.00%
+
+Test Confusion Matrix:
+[[56 52]
+ [33 75]]
+
+Test Confusion Matrix SUBJECT JH:
+[[ 8 28]
+ [ 7 29]]
+
+Test Confusion Matrix SUBJECT RN:
+[[19 17]
+ [16 20]]
+
+Test Confusion Matrix SUBJECT TR:
+[[18 18]
+ [11 25]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.63      0.52      0.57       108
+           1       0.59      0.69      0.64       108
+
+    accuracy                           0.61       216
+   macro avg       0.61      0.61      0.60       216
+weighted avg       0.61      0.61      0.60       216
+
+Test Classification Report SUBJECT JH:
+              precision    recall  f1-score   support
+
+           0       0.53      0.22      0.31        36
+           1       0.51      0.81      0.62        36
+
+    accuracy                           0.51        72
+   macro avg       0.52      0.51      0.47        72
+weighted avg       0.52      0.51      0.47        72
+
+Test Classification Report SUBJECT RN:
+              precision    recall  f1-score   support
+
+           0       0.54      0.53      0.54        36
+           1       0.54      0.56      0.55        36
+
+    accuracy                           0.54        72
+   macro avg       0.54      0.54      0.54        72
+weighted avg       0.54      0.54      0.54        72
+
+Test Classification Report SUBJECT TR:
+              precision    recall  f1-score   support
+
+           0       0.62      0.50      0.55        36
+           1       0.58      0.69      0.63        36
+
+    accuracy                           0.60        72
+   macro avg       0.60      0.60      0.59        72
+weighted avg       0.60      0.60      0.59        72
+
+
+
+Results for Training on S1 + S2 and Test on S3
+----------------------------------------------------
+Avg. Fold Train Accuracy: 70.61%
+  Avg. Fold Train Accuracy SUBJECT JH: 61.11%
+  Avg. Fold Train Accuracy SUBJECT RN: 69.05%
+  Avg. Fold Train Accuracy SUBJECT TR: 75.00%
+
+Test Accuracy: 69.91%
+  Test Accuracy SUBJECT JH: 56.94%
+  Test Accuracy SUBJECT RN: 65.28%
+  Test Accuracy SUBJECT TR: 73.61%
+
+Test Balanced Accuracy: 69.91%
+  Test Balanced Accuracy SUBJECT JH: 56.94%
+  Test Balanced Accuracy SUBJECT RN: 65.28%
+  Test Balanced Accuracy SUBJECT TR: 73.61%
+
+Test Precision: 69.72%
+  Test Precision SUBJECT JH: 58.62%
+  Test Precision SUBJECT RN: 65.71%
+  Test Precision SUBJECT TR: 74.29%
+
+Test Recall: 70.37%
+  Test Recall SUBJECT JH: 47.22%
+  Test Recall SUBJECT RN: 63.89%
+  Test Recall SUBJECT TR: 72.22%
+
+Test F1 Score: 70.05%
+  Test F1 Score SUBJECT JH: 52.31%
+  Test F1 Score SUBJECT RN: 64.79%
+  Test F1 Score SUBJECT TR: 73.24%
+
+Test Matthews Correlation Coefficient (MCC): 0.3982
+  Test MCC SUBJECT JH: 0.1416
+  Test MCC SUBJECT RN: 0.3057
+  Test MCC SUBJECT TR: 0.4724
+
+Test True Negative Rate (TNR): 69.44%
+  Test TNR SUBJECT JH: 66.67%
+  Test TNR SUBJECT RN: 66.67%
+  Test TNR SUBJECT TR: 75.00%
+
+Test False Positive Rate (FPR): 30.56%
+  Test FPR SUBJECT JH: 33.33%
+  Test FPR SUBJECT RN: 33.33%
+  Test FPR SUBJECT TR: 25.00%
+
+Test Confusion Matrix:
+[[75 33]
+ [32 76]]
+
+Test Confusion Matrix SUBJECT JH:
+[[24 12]
+ [19 17]]
+
+Test Confusion Matrix SUBJECT RN:
+[[24 12]
+ [13 23]]
+
+Test Confusion Matrix SUBJECT TR:
+[[27  9]
+ [10 26]]
+
+Test Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.70      0.69      0.70       108
+           1       0.70      0.70      0.70       108
+
+    accuracy                           0.70       216
+   macro avg       0.70      0.70      0.70       216
+weighted avg       0.70      0.70      0.70       216
+
+Test Classification Report SUBJECT JH:
+              precision    recall  f1-score   support
+
+           0       0.56      0.67      0.61        36
+           1       0.59      0.47      0.52        36
+
+    accuracy                           0.57        72
+   macro avg       0.57      0.57      0.57        72
+weighted avg       0.57      0.57      0.57        72
+
+Test Classification Report SUBJECT RN:
+              precision    recall  f1-score   support
+
+           0       0.65      0.67      0.66        36
+           1       0.66      0.64      0.65        36
+
+    accuracy                           0.65        72
+   macro avg       0.65      0.65      0.65        72
+weighted avg       0.65      0.65      0.65        72
+
+Test Classification Report SUBJECT TR:
+              precision    recall  f1-score   support
+
+           0       0.73      0.75      0.74        36
+           1       0.74      0.72      0.73        36
+
+    accuracy                           0.74        72
+   macro avg       0.74      0.74      0.74        72
+weighted avg       0.74      0.74      0.74        72
+
+
+
